@@ -1,0 +1,20 @@
+{
+  "name": "basic-list-box",
+  "description": "A list box that allows single selection",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "basic-list-box.html",
+  "dependencies": {
+    "polymer-selector": "Polymer/polymer-selector#master"
+  },
+  "dev-dependencies": {
+    "basic-framed-content": "basic-web-components/basic-framed-content#master"
+  },
+  "keywords": [
+    "basic-web-components",
+    "web-components"
+  ],
+  "ignore": [
+    "**/.*"
+  ]
+}
