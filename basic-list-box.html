@@ -27,8 +27,8 @@ The selection behavior generally follows that of Microsoft Windows:
 }
 
 /* Generic appearance */
-:host([generic]:host) {
-  border: 1px solid lightgray;
+:host([generic=""]) {
+  border: 1px solid gray;
   box-sizing: border-box;
   cursor: default;
 }
@@ -71,7 +71,9 @@ Polymer( "basic-list-box", {
   },
 
   ready: function() {
+
     this.super();
+
     if ( this.tabIndex == -1 /* Default value */ ) {
       // Try to convince the browser that the list is focusable, but without
       // forcing it into the tab order (as a positive tabindex would do).
@@ -79,11 +81,20 @@ Polymer( "basic-list-box", {
       // (explicitly) set to a negative number.
       this.tabIndex = -1;
     }
+
     this.addEventListener( "keydown", function( event ) {
       this._keydown( event );
     }.bind( this ));
-    if ( this.generic == null ) {
+
+    if ( this.getAttribute( "generic" ) == null ) {
       this.generic = true;
+    }
+  },
+
+  publish: {
+    generic: {
+      value: null,
+      reflect: true
     }
   },
 
