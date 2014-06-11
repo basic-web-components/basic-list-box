@@ -53,6 +53,11 @@ collapsing the selection state to a single item when navigation up/down.
   cursor: default;
 }
 
+:host(:focus) {
+  outline: 1px dotted; /* Safari/IE */
+  outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
+}
+
 polyfill-next-selector {
   content: '*';
 }
