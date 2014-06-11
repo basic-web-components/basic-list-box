@@ -126,6 +126,9 @@ Polymer( "basic-list-box", {
     if ( this.getAttribute( "generic" ) == null ) {
       this.generic = true;
     }
+    if ( this.getAttribute( "aria-role" ) == null ) {
+      this.setAttribute( "aria-role", "listbox" );
+    }
   },
 
   publish: {
