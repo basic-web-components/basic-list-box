@@ -1,5 +1,6 @@
 <!--
-A list box that allows single selection.
+A single-selection list box that supports selection highlighting (using the
+system highlight color) and keyboard navigation.
 
 The user can select an item with the mouse/touch or keyboard: Up/Down, Page
 Up/Down, Home/End.
@@ -24,6 +25,12 @@ you cannot yet include items in the list by using a child "content" element.
 
 @element basic-list-box
 @demo http://basic-web-components.github.io/components/basic-list-box/
+-->
+<!--
+TODO: This doesn't deal with multi-selection. Either incorporate (rather than
+inherit from) core-selector to avoid the multi-selection case, or else enhance
+this to support multi-selection. For keyboard navigation, that would be mean
+collapsing the selection state to a single item when navigation up/down.
 -->
 
 <link rel="import" href="../core-selector/core-selector.html">
