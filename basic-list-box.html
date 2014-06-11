@@ -43,7 +43,9 @@ collapsing the selection state to a single item when navigation up/down.
 :host {
   display: block;
   outline: none;
-  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll; /* for momentum scrolling */
+  -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 );
 }
 
 /* Generic appearance */
