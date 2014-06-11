@@ -1,7 +1,6 @@
 {
   "name": "basic-list-box",
-  "description": "A single-selection list box with highlighting and keyboard
-navigation",
+  "description": "A single-selection list box with highlighting and keyboard navigation",
   "version": "0.0.1",
   "license": "MIT",
   "main": "basic-list-box.html",
