@@ -4,18 +4,31 @@ A list box that allows single selection.
 The user can select an item with the mouse/touch or keyboard: Up/Down, Page
 Up/Down, Home/End.
 
-The selection behavior generally follows that of Microsoft Windows:
+The keyboard interaction model generally follows that of Microsoft Windows'
+list boxes instead of those in OS X:
+
 * The Page Up/Down and Home/End keys actually move the selection, rather than
-  just scrolling the list. The former behavior seems more generally useful.
+  just scrolling the list. The former behavior seems more generally useful for
+  keyboard users.
+
 * Pressing Page Up/Down will move the selection to the topmost/bottommost
   visible item if the selection is not already there. Thereafter, the key will
   move the selection up/down by a page, and (per the above point) make the
   selected item visible.
+
+Programmatically selecting an item (by setting the selected property) scrolls
+the item into view.
+
+This component does not yet handle redistributed content properly. That is,
+you cannot yet include items in the list by using a child "content" element.
+
+@element basic-list-box
+@demo http://basic-web-components.github.io/components/basic-list-box/
 -->
 
-<link rel="import" href="../polymer-selector/polymer-selector.html">
+<link rel="import" href="../core-selector/core-selector.html">
 
-<polymer-element name="basic-list-box" extends="polymer-selector" attributes="generic">
+<polymer-element name="basic-list-box" extends="core-selector" attributes="generic">
 
 <template>
 
@@ -37,8 +50,6 @@ polyfill-next-selector {
   content: '*';
 }
 ::content * {
-  /* HACK: explicit background works around shadow reprojection rendering bug. */
-  background: white;
   box-sizing: border-box;
   display: block;
   padding: 0.25em;
@@ -47,9 +58,9 @@ polyfill-next-selector {
 }
 
 polyfill-next-selector {
-  content: ':host > .polymer-selected';
+  content: ':host > .core-selected';
 }
-::content .polymer-selected {
+::content .core-selected {
   background: highlight;
   color: highlighttext;
 }
@@ -62,28 +73,42 @@ polyfill-next-selector {
 <script>
 Polymer( "basic-list-box", {
 
+  /**
+   * Scroll down one page.
+   *
+   * @method pageDown
+   */
   pageDown: function() {
     return this._scrollOnePage( true );
   },
 
+  /**
+   * Scroll up one page.
+   *
+   * @method pageUp
+   */
   pageUp: function() {
     return this._scrollOnePage( false );
   },
 
   ready: function() {
 
+    // HACK: We'd prefer to use "tap" (the default event), but as of 6/11/14,
+    // that doesn't appear to work in IE 11.
+    this.activateEvent = "click";
+
     this.super();
 
-    if ( this.tabIndex == -1 /* Default value */ ) {
-      // Try to convince the browser that the list is focusable, but without
-      // forcing it into the tab order (as a positive tabindex would do).
-      // Firefox, Chrome, and IE seem to handle this as desired if tabindex is
-      // (explicitly) set to a negative number.
+    if ( this.getAttribute( "tabIndex" ) == null ) {
+      // Convince the browser that the list is focusable, but without forcing it
+      // into the tab order (as a positive tabindex would do). Firefox, Chrome,
+      // and IE seem to handle this as desired if tabindex is *explicitly* set
+      // to a negative number.
       this.tabIndex = -1;
     }
 
     this.addEventListener( "keydown", function( event ) {
-      this._keydown( event );
+      return this._keydown( event );
     }.bind( this ));
 
     if ( this.getAttribute( "generic" ) == null ) {
@@ -103,6 +128,8 @@ Polymer( "basic-list-box", {
     var index = this.selected;
     return ( index != null ) ? index : -1;
   },
+  // BUG: This setter doesn't appear to get called. Instead, attempts to set
+  // the selectedIndex property will invoke the base class implementation.
   set selectedIndex( index ) {
     this.selected = ( index >= 0 ) ? index : null;
   },
@@ -115,9 +142,14 @@ Polymer( "basic-list-box", {
     }
   },
 
+  /**
+   * Select the first item in the list.
+   *
+   * @method selectFirstItem
+   */
   selectFirstItem: function() {
     if ( this.items.length > 0 ) {
-      this.selectedIndex = 0;
+      this.selected = 0;
       // The list will have already scrolled the first element into view, but if
       // the list has top padding, the scroll won't be all the way at the top.
       // So, as a special case, force it to scroll to the top.
@@ -128,29 +160,44 @@ Polymer( "basic-list-box", {
     }
   },
 
+  /**
+   * Select the last item in the list.
+   *
+   * @method selectLastItem
+   */
   selectLastItem: function() {
     if ( this.items.length > 0 ) {
-      this.selectedIndex = this.items.length - 1;
+      this.selected = this.items.length - 1;
       return true;
     } else {
       return false;
     }
   },
 
+  /**
+   * Select the next item in the list.
+   *
+   * @method selectNextItem
+   */
   selectNextItem: function() {
     var index = this.selectedIndex + 1;
     if ( index < this.items.length ) {
-      this.selectedIndex = index;
+      this.selected = index;
       return true;
     } else {
       return false;
     }
   },
 
+  /**
+   * Select the previous item in the list.
+   *
+   * @method selectPreviousItem
+   */
   selectPreviousItem: function() {
     var index = this.selectedIndex - 1;
     if ( index >= 0 && this.items.length > 0 ) {
-      this.selectedIndex = index;
+      this.selected = index;
       return true;
     } else {
       return false;
@@ -301,7 +348,7 @@ Polymer( "basic-list-box", {
     }
 
     if ( newIndex !== selectedIndex ) {
-      this.selectedIndex = newIndex;
+      this.selected = newIndex;
       return true; // We handled the page up/down ourselves.
     } else {
       return false; // We didn't do anything.
@@ -316,7 +363,7 @@ Polymer( "basic-list-box", {
     var style = getComputedStyle( this.selectedItem );
     var inlineDisplayValues = [ "inline", "inline-block", "inline-table" ];
     var itemIsInline = ( inlineDisplayValues.indexOf( style.display ) >= 0 );
-    return itemIsInline
+    return itemIsInline;
   }
 });
 </script>
