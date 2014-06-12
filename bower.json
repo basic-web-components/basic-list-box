@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "basic-list-box.html",
   "dependencies": {
-    "core-selector": "Polymer/core-selector#master"
+    "basic-selector": "basic-web-components/basic-selector#master"
   },
   "dev-dependencies": {
     "basic-framed-content": "basic-web-components/basic-framed-content#master"

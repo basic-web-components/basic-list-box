@@ -20,8 +20,12 @@ list boxes instead of those in OS X:
 Programmatically selecting an item (by setting the selected property) scrolls
 the item into view.
 
-This component does not yet handle redistributed content properly. That is,
-you cannot yet include items in the list by using a child "content" element.
+Like other Basic Web Components, this can handle distributed content: you can
+include a content element inside a basic-list-box, and the list will navigate
+through the distributed content. Note: for the time being, if you do use basic-
+list-box inside your own component, it appears that you'll need to wire up your
+own keyboard navigation, and forward the list navigation keys to the basic-list-
+box.
 
 @element basic-list-box
 @demo http://basic-web-components.github.io/components/basic-list-box/
@@ -33,54 +37,54 @@ this to support multi-selection. For keyboard navigation, that would be mean
 collapsing the selection state to a single item when navigation up/down.
 -->
 
-<link rel="import" href="../core-selector/core-selector.html">
+<link rel="import" href="../basic-selector/basic-selector.html">
 
-<polymer-element name="basic-list-box" extends="core-selector" attributes="generic">
+<polymer-element name="basic-list-box" extends="basic-selector" attributes="generic">
 
 <template>
 
-<style>
-:host {
-  display: block;
-  outline: none;
-  -webkit-overflow-scrolling: touch;
-  overflow-y: scroll; /* for momentum scrolling */
-  -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 );
-}
+  <style>
+  :host {
+    display: block;
+    outline: none;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll; /* for momentum scrolling */
+    -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 );
+  }
 
-/* Generic appearance */
-:host([generic=""]) {
-  border: 1px solid gray;
-  box-sizing: border-box;
-  cursor: default;
-}
+  /* Generic appearance */
+  :host([generic=""]) {
+    border: 1px solid gray;
+    box-sizing: border-box;
+    cursor: default;
+  }
 
-:host(:focus) {
-  outline: 1px dotted; /* Safari/IE */
-  outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
-}
+  :host(:focus) {
+    outline: 1px dotted; /* Safari/IE */
+    outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
+  }
 
-polyfill-next-selector {
-  content: '*';
-}
-::content * {
-  box-sizing: border-box;
-  display: block;
-  padding: 0.25em;
-  -webkit-user-select: none;
-  user-select: none;
-}
+  polyfill-next-selector {
+    content: '*';
+  }
+  ::content * {
+    box-sizing: border-box;
+    display: block;
+    padding: 0.25em;
+    -webkit-user-select: none;
+    user-select: none;
+  }
 
-polyfill-next-selector {
-  content: ':host > .core-selected';
-}
-::content .core-selected {
-  background: highlight;
-  color: highlighttext;
-}
-</style>
+  polyfill-next-selector {
+    content: ':host > .core-selected';
+  }
+  ::content .core-selected {
+    background: highlight;
+    color: highlighttext;
+  }
+  </style>
 
-<shadow></shadow>
+  <shadow></shadow>
 
 </template>
 
@@ -138,17 +142,6 @@ Polymer( "basic-list-box", {
       value: null,
       reflect: true
     }
-  },
-
-  // TODO: Handle valueattr: selected indicates a value, not the index.
-  get selectedIndex() {
-    var index = this.selected;
-    return ( index != null ) ? index : -1;
-  },
-  // BUG: This setter doesn't appear to get called. Instead, attempts to set
-  // the selectedIndex property will invoke the base class implementation.
-  set selectedIndex( index ) {
-    this.selected = ( index >= 0 ) ? index : null;
   },
 
   // Override base implementation so we can ensure new item is in view.
