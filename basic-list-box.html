@@ -52,6 +52,21 @@ collapsing the selection state to a single item when navigation up/down.
     -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 );
   }
 
+  :host(:focus) {
+    outline: 1px dotted; /* Safari/IE */
+    outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
+  }
+
+  polyfill-next-selector {
+    content: ':host > *';
+  }
+  ::content > * {
+    box-sizing: border-box;
+    display: block;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   /* Generic appearance */
   :host([generic=""]) {
     border: 1px solid gray;
@@ -59,26 +74,17 @@ collapsing the selection state to a single item when navigation up/down.
     cursor: default;
   }
 
-  :host(:focus) {
-    outline: 1px dotted; /* Safari/IE */
-    outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
-  }
-
   polyfill-next-selector {
-    content: '*';
+    content: ':host([generic=""]) > *';
   }
-  ::content * {
-    box-sizing: border-box;
-    display: block;
+  :host([generic=""]) ::content > * {
     padding: 0.25em;
-    -webkit-user-select: none;
-    user-select: none;
   }
 
   polyfill-next-selector {
-    content: ':host > .core-selected';
+    content: ':host([generic=""]) > .core-selected';
   }
-  ::content .core-selected {
+  :host([generic=""]) ::content > .core-selected {
     background: highlight;
     color: highlighttext;
   }
