@@ -166,9 +166,9 @@ Polymer({
     if ( prefix == null || prefix.length === 0 ) {
       return;
     }
-    var item = this._getIndexOfItemWithTextPrefix( prefix );
-    if ( item ) {
-      this.selected = item;
+    var index = this._getIndexOfItemWithTextPrefix( prefix );
+    if ( index >= 0 ) {
+      this.selected = index;
     }
   },
 
@@ -293,6 +293,7 @@ Polymer({
     }
   },
 
+  // Return the index of the first item with the given prefix, else -1.
   _getIndexOfItemWithTextPrefix: function( prefix ) {
     var itemTextContents = this._getItemTextContents();
     var prefixLength = prefix.length;
@@ -302,7 +303,7 @@ Polymer({
         return i;
       }
     }
-    return null;
+    return -1;
   },
 
   // Return an array of the text content (in lowercase) of all items.
@@ -334,13 +335,14 @@ Polymer({
 
   _keydown: function( event ) {
     var handled = false;
+    var resetTyping = true;
     switch ( event.keyCode ) {
       case 8: // Backspace
         this._handleBackspace();
         handled = true;
+        resetTyping = false;
         break;
       case 27: // Escape
-        this._resetTypedText();
         handled = true;
         break;
       case 33: // Page Up
@@ -376,8 +378,14 @@ Polymer({
           this._handlePlainCharacter( String.fromCharCode( event.which ));
         }
         handled = false;
+        resetTyping = false;
+    }
+
+    if ( resetTyping ) {
+      this._resetTypedText();
     }
     console.log( this._typedText );
+
     if ( handled ) {
       event.preventDefault();
       return false;
