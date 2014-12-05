@@ -100,7 +100,7 @@ Polymer({
   contentChanged: function() {
     this.super();
     this._itemTextContents = null;
-    this._resetTypedText();
+    this._resetTypedPrefix();
   },
 
   /**
@@ -310,7 +310,6 @@ Polymer({
   // Cache these results.
   _getItemTextContents: function() {
     if ( !this._itemTextContents ) {
-      console.log( "_getItemTextContents" );
       this._itemTextContents = this.flattenChildren.map( function( child ) {
         return child.textContent.toLowerCase();
       });
@@ -319,28 +318,30 @@ Polymer({
   },
 
   _handleBackspace: function() {
-    var length = this._typedText.length;
+    var length = this._typedPrefix.length;
     if ( length > 0 ) {
-      this._typedText = this._typedText.substr( 0, length - 1 );
+      this._typedPrefix = this._typedPrefix.substr( 0, length - 1 );
     }
-    this.selectItemWithTextPrefix( this._typedText );
-    this._setTypingTimeout();
+    this.selectItemWithTextPrefix( this._typedPrefix );
+    this._setPrefixTimeout();
   },
 
   _handlePlainCharacter: function( char ) {
-    this._typedText += char.toLowerCase();
-    this.selectItemWithTextPrefix( this._typedText );
-    this._setTypingTimeout();
+    this._typedPrefix += char.toLowerCase();
+    this.selectItemWithTextPrefix( this._typedPrefix );
+    this._setPrefixTimeout();
   },
 
   _keydown: function( event ) {
+
     var handled = false;
-    var resetTyping = true;
+    var resetPrefix = true;
+    
     switch ( event.keyCode ) {
       case 8: // Backspace
         this._handleBackspace();
         handled = true;
-        resetTyping = false;
+        resetPrefix = false;
         break;
       case 27: // Escape
         handled = true;
@@ -379,13 +380,12 @@ Polymer({
           this._handlePlainCharacter( String.fromCharCode( event.which ));
         }
         handled = false;
-        resetTyping = false;
+        resetPrefix = false;
     }
 
-    if ( resetTyping ) {
-      this._resetTypedText();
+    if ( resetPrefix ) {
+      this._resetTypedPrefix();
     }
-    console.log( this._typedText );
 
     if ( handled ) {
       event.preventDefault();
@@ -393,16 +393,16 @@ Polymer({
     }
   },
 
-  _resetTypedText: function() {
-    this._typedText = "";
-    this._resetTypingTimeout();
+  _resetPrefixTimeout: function() {
+    if ( this._prefixTimeout ) {
+      clearTimeout( this._prefixTimeout );
+      this._prefixTimeout = false;
+    }
   },
 
-  _resetTypingTimeout: function() {
-    if ( this._typingTimeout ) {
-      clearTimeout( this._typingTimeout );
-      this._typingTimeout = false;
-    }
+  _resetTypedPrefix: function() {
+    this._typedPrefix = "";
+    this._resetPrefixTimeout();
   },
 
   // Scroll the given element completely into view, minimizing the degree of
@@ -476,27 +476,26 @@ Polymer({
     return itemIsInline;
   },
 
-  _setTypingTimeout: function() {
-    this._resetTypingTimeout();
-    this._typingTimeout = setTimeout( function() {
-      console.log( "*** timeoout *** ");
-      this._resetTypedText();
-    }.bind( this ), this._typingTimeoutDuration );
+  _setPrefixTimeout: function() {
+    this._resetPrefixTimeout();
+    this._prefixTimeout = setTimeout( function() {
+      this._resetTypedPrefix();
+    }.bind( this ), this._prefixTimeoutDuration );
   },
 
-  // The text content of the items. This is only populated if the user is
-  // navigating with typed prefix matching.
+  // The text content of the items. This is only populated if the user tries to
+  // navigate with typed prefix matching.
   _itemTextContents: null,
 
-  // The string the user is currently constructing to select an item.
-  _typedText: "",
-
   // Times out when the user has not typed anything for a bit.
-  _typingTimeout: null,
+  _prefixTimeout: null,
 
   // Time in milliseconds after which the user is considered to have stopped
   // typing.
-  _typingTimeoutDuration: 1000
+  _prefixTimeoutDuration: 1000,
+
+  // The string the user has typed to navigate by prefix.
+  _typedPrefix: ""
 
 });
 </script>
