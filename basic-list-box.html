@@ -374,7 +374,8 @@ Polymer({
         handled = event.altKey ? this.selectLastItem() : this.selectNextItem();
         break;
       default:
-        if ( !event.ctrlKey && !event.metaKey && !event.altKey ) {
+        if ( !event.ctrlKey && !event.metaKey && !event.altKey
+          && event.which !== 32 /* Space */) {
           this._handlePlainCharacter( String.fromCharCode( event.which ));
         }
         handled = false;
