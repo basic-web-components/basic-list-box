@@ -97,6 +97,12 @@ collapsing the selection state to a single item when navigation up/down.
 <script>
 Polymer({
 
+  contentChanged: function() {
+    this.super();
+    this._itemTextContents = null;
+    this._resetTypedText();
+  },
+
   /**
    * Scroll down one page.
    *
@@ -147,6 +153,22 @@ Polymer({
     generic: {
       value: null,
       reflect: true
+    }
+  },
+
+  /**
+   * Select the first item whose text content begins with the given prefix.
+   *
+   * @method selectItemWithTextPrefix
+   * @param prefix [String] The string to search for
+   */
+  selectItemWithTextPrefix: function( prefix ) {
+    if ( prefix == null || prefix.length === 0 ) {
+      return;
+    }
+    var item = this._getIndexOfItemWithTextPrefix( prefix );
+    if ( item ) {
+      this.selected = item;
     }
   },
 
@@ -271,9 +293,56 @@ Polymer({
     }
   },
 
+  _getIndexOfItemWithTextPrefix: function( prefix ) {
+    var itemTextContents = this._getItemTextContents();
+    var prefixLength = prefix.length;
+    for ( var i = 0; i < itemTextContents.length; i++ ) {
+      var itemTextContent = itemTextContents[i];
+      if ( itemTextContent.substr( 0, prefixLength ) === prefix ) {
+        return i;
+      }
+    }
+    return null;
+  },
+
+  // Return an array of the text content (in lowercase) of all items.
+  // Cache these results.
+  _getItemTextContents: function() {
+    if ( !this._itemTextContents ) {
+      console.log( "_getItemTextContents" );
+      this._itemTextContents = this.flattenChildren.map( function( child ) {
+        return child.textContent.toLowerCase();
+      });
+    }
+    return this._itemTextContents;
+  },
+
+  _handleBackspace: function() {
+    var length = this._typedText.length;
+    if ( length > 0 ) {
+      this._typedText = this._typedText.substr( 0, length - 1 );
+    }
+    this.selectItemWithTextPrefix( this._typedText );
+    this._setTypingTimeout();
+  },
+
+  _handlePlainCharacter: function( char ) {
+    this._typedText += char.toLowerCase();
+    this.selectItemWithTextPrefix( this._typedText );
+    this._setTypingTimeout();
+  },
+
   _keydown: function( event ) {
     var handled = false;
     switch ( event.keyCode ) {
+      case 8: // Backspace
+        this._handleBackspace();
+        handled = true;
+        break;
+      case 27: // Escape
+        this._resetTypedText();
+        handled = true;
+        break;
       case 33: // Page Up
         handled = this.pageUp();
         break;
@@ -303,11 +372,27 @@ Polymer({
         handled = event.altKey ? this.selectLastItem() : this.selectNextItem();
         break;
       default:
+        if ( !event.ctrlKey && !event.metaKey && !event.altKey ) {
+          this._handlePlainCharacter( String.fromCharCode( event.which ));
+        }
         handled = false;
     }
+    console.log( this._typedText );
     if ( handled ) {
       event.preventDefault();
       return false;
+    }
+  },
+
+  _resetTypedText: function() {
+    this._typedText = "";
+    this._resetTypingTimeout();
+  },
+
+  _resetTypingTimeout: function() {
+    if ( this._typingTimeout ) {
+      clearTimeout( this._typingTimeout );
+      this._typingTimeout = false;
     }
   },
 
@@ -380,7 +465,30 @@ Polymer({
     var inlineDisplayValues = [ "inline", "inline-block", "inline-table" ];
     var itemIsInline = ( inlineDisplayValues.indexOf( style.display ) >= 0 );
     return itemIsInline;
-  }
+  },
+
+  _setTypingTimeout: function() {
+    this._resetTypingTimeout();
+    this._typingTimeout = setTimeout( function() {
+      console.log( "*** timeoout *** ");
+      this._resetTypedText();
+    }.bind( this ), this._typingTimeoutDuration );
+  },
+
+  // The text content of the items. This is only populated if the user is
+  // navigating with typed prefix matching.
+  _itemTextContents: null,
+
+  // The string the user is currently constructing to select an item.
+  _typedText: "",
+
+  // Times out when the user has not typed anything for a bit.
+  _typingTimeout: null,
+
+  // Time in milliseconds after which the user is considered to have stopped
+  // typing.
+  _typingTimeoutDuration: 1000
+
 });
 </script>
 
