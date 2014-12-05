@@ -3,7 +3,8 @@ A single-selection list box that supports selection highlighting (using the
 system highlight color) and keyboard navigation.
 
 The user can select an item with the mouse/touch or keyboard: Up/Down, Page
-Up/Down, Home/End.
+Up/Down, Home/End. The user can also select an item by typing the beginning of
+an item's text.
 
 The keyboard interaction model generally follows that of Microsoft Windows'
 list boxes instead of those in OS X:
@@ -39,7 +40,7 @@ collapsing the selection state to a single item when navigation up/down.
 
 <link rel="import" href="../basic-selector/basic-selector.html">
 
-<polymer-element name="basic-list-box" extends="basic-selector" attributes="generic">
+<polymer-element name="basic-list-box" extends="basic-selector">
 
 <template>
 
@@ -150,9 +151,23 @@ Polymer({
   },
 
   publish: {
+
     generic: {
       value: null,
       reflect: true
+    },
+
+    /**
+     * True if prefix navigation is enabled. This lets the user navigate by
+     * typing the beginning of an item; the first matching item is automatically
+     * selected.
+     *
+     * @attribute prefixNavigation
+     * @type Boolean
+     * @default true
+     */
+    prefixNavigation: {
+      value: true
     }
   },
 
@@ -339,9 +354,11 @@ Polymer({
     
     switch ( event.keyCode ) {
       case 8: // Backspace
-        this._handleBackspace();
-        handled = true;
-        resetPrefix = false;
+        if ( this.prefixNavigation ) {
+          this._handleBackspace();
+          handled = true;
+          resetPrefix = false;
+        }
         break;
       case 27: // Escape
         handled = true;
@@ -375,15 +392,15 @@ Polymer({
         handled = event.altKey ? this.selectLastItem() : this.selectNextItem();
         break;
       default:
-        if ( !event.ctrlKey && !event.metaKey && !event.altKey
+        if ( this.prefixNavigation
+          && !event.ctrlKey && !event.metaKey && !event.altKey
           && event.which !== 32 /* Space */) {
           this._handlePlainCharacter( String.fromCharCode( event.which ));
         }
-        handled = false;
         resetPrefix = false;
     }
 
-    if ( resetPrefix ) {
+    if ( this.prefixNavigation && resetPrefix ) {
       this._resetTypedPrefix();
     }
 
