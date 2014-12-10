@@ -28,6 +28,13 @@ list-box inside your own component, it appears that you'll need to wire up your
 own keyboard navigation, and forward the list navigation keys to the basic-list-
 box.
 
+This component includes basic ARIA support to provide a reasonable default
+experience, e.g., for screen readers. The list component itself will be assigned
+an appropriate ARIA role (default is "listbox"). The ID of the selected item
+will be reflected in an "aria-activedescendant" attribute applied to the list.
+To support this feature, all items in the list need unique IDs. If an item does
+not have an ID, basic-list-box will automatically assign a default ID.
+
 @element basic-list-box
 @demo http://basic-web-components.github.io/components/basic-list-box/
 -->
@@ -96,6 +103,11 @@ collapsing the selection state to a single item when navigation up/down.
 </template>
 
 <script>
+(function () {
+
+// Used to assign unique IDs to item elements without IDs;
+idCount = 0;
+
 Polymer({
 
   contentChanged: function() {
@@ -145,23 +157,23 @@ Polymer({
     if ( this.getAttribute( "generic" ) == null ) {
       this.generic = true;
     }
+
     if ( this.getAttribute( "role" ) == null ) {
+      // Set the default ARIA role.
       this.setAttribute( "role", "listbox" );
     }
-    var componentId = '';
-    if(this.getAttribute( "id" )) {
-      componentId = this.getAttribute( "id" );
-    }
 
-    this.childBaseId = componentId + "option";
-
-    if( this.children.length) {
-      var children = this.children;
-      for (var i = 0; i < children.length; i++) {
-        children[i].setAttribute("role", "option");
-        children[i].setAttribute( "id", this.childBaseId + i);
-      }
-    }
+    // Determine a base item ID based on the component's own ID. This will be
+    // combined with a unique integer to assign IDs to items that don't have an
+    // explicit ID. If the basic-list-box has ID "foo", then its items will have
+    // IDs that look like "_fooOption1". If the list has no ID itself, its items
+    // will get IDs that look like "_option1". Item IDs are prefixed with an
+    // underscore to differentiate them from manually-assigned IDs, and to
+    // minimize the potential for ID conflicts.
+    var componentId = this.getAttribute( "id" );
+    this.itemBaseId = componentId
+      ? "_" + componentId + "Option"
+      : "_option";
   },
 
   publish: {
@@ -204,20 +216,14 @@ Polymer({
   // Override base implementation so we can ensure new item is in view.
   selectedItemChanged: function() {
     this.super();
+
     if ( this.selectedItem ) {
+
+      var selectedItemId = this.selectedItem.getAttribute( "id" );
+      this.setAttribute( "aria-activedescendant",  selectedItemId );      
+
       this._scrollElementIntoView( this.selectedItem );
     }
-    this.setActiveDescendant();
-  },
-
-  /**
-   * Update active child for accessibility.
-   *
-   * @method setActiveDescendant
-   */
-  setActiveDescendant: function(){
-    var activeChildId = this.childBaseId + this.selected;
-    this.setAttribute( "aria-activedescendant",  activeChildId );
   },
 
   /**
@@ -370,6 +376,17 @@ Polymer({
     this._typedPrefix += char.toLowerCase();
     this.selectItemWithTextPrefix( this._typedPrefix );
     this._setPrefixTimeout();
+  },
+
+  _itemAdded: function( item ) {
+    this.super([ item ]);
+    item.setAttribute( "role", "option" );
+
+    // Ensure each item has an ID so we can set aria-activedescendant on the
+    // overall list whenever the selection changes.
+    if ( !item.getAttribute( "id" )) {
+      item.setAttribute( "id", this.itemBaseId + idCount++ );
+    }
   },
 
   _keydown: function( event ) {
@@ -540,6 +557,8 @@ Polymer({
   _typedPrefix: ""
 
 });
+
+})();
 </script>
 
 </polymer-element>
