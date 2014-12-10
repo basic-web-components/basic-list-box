@@ -145,8 +145,22 @@ Polymer({
     if ( this.getAttribute( "generic" ) == null ) {
       this.generic = true;
     }
-    if ( this.getAttribute( "aria-role" ) == null ) {
-      this.setAttribute( "aria-role", "listbox" );
+    if ( this.getAttribute( "role" ) == null ) {
+      this.setAttribute( "role", "listbox" );
+    }
+    var componentId = '';
+    if(this.getAttribute( "id" )) {
+      componentId = this.getAttribute( "id" );
+    }
+
+    this.childBaseId = componentId + "option";
+
+    if( this.children.length) {
+      var children = this.children;
+      for (var i = 0; i < children.length; i++) {
+        children[i].setAttribute("role", "option");
+        children[i].setAttribute( "id", this.childBaseId + i);
+      }
     }
   },
 
@@ -193,6 +207,17 @@ Polymer({
     if ( this.selectedItem ) {
       this._scrollElementIntoView( this.selectedItem );
     }
+    this.setActiveDescendant();
+  },
+
+  /**
+   * Update active child for accessibility.
+   *
+   * @method setActiveDescendant
+   */
+  setActiveDescendant: function(){
+    var activeChildId = this.childBaseId + this.selected;
+    this.setAttribute( "aria-activedescendant",  activeChildId );
   },
 
   /**
