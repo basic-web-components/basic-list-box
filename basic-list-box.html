@@ -103,7 +103,7 @@ collapsing the selection state to a single item when navigation up/down.
 </template>
 
 <script>
-(function () {
+(function() {
 
 // Used to assign unique IDs to item elements without IDs;
 idCount = 0;
@@ -122,7 +122,7 @@ Polymer({
    * @method pageDown
    */
   pageDown: function() {
-    return this._scrollOnePage( true );
+    return this._scrollOnePage(true);
   },
 
   /**
@@ -131,18 +131,18 @@ Polymer({
    * @method pageUp
    */
   pageUp: function() {
-    return this._scrollOnePage( false );
+    return this._scrollOnePage(false);
   },
 
   ready: function() {
 
     // HACK: We'd prefer to use "tap" (the default event), but as of 6/11/14,
     // that doesn't appear to work in IE 11.
-    this.activateEvent = "click";
+    this.activateEvent = 'click';
 
     this.super();
 
-    if ( this.getAttribute( "tabIndex" ) == null ) {
+    if (this.getAttribute('tabIndex') == null) {
       // Convince the browser that the list is focusable, but without forcing it
       // into the tab order (as a positive tabindex would do). Firefox, Chrome,
       // and IE seem to handle this as desired if tabindex is *explicitly* set
@@ -150,17 +150,17 @@ Polymer({
       this.tabIndex = -1;
     }
 
-    this.addEventListener( "keydown", function( event ) {
-      return this._keydown( event );
-    }.bind( this ));
+    this.addEventListener('keydown', function(event) {
+      return this._keydown(event);
+    }.bind(this));
 
-    if ( this.getAttribute( "generic" ) == null ) {
+    if (this.getAttribute('generic') == null) {
       this.generic = true;
     }
 
-    if ( this.getAttribute( "role" ) == null ) {
+    if (this.getAttribute('role') == null) {
       // Set the default ARIA role.
-      this.setAttribute( "role", "listbox" );
+      this.setAttribute('role', 'listbox');
     }
 
     // Determine a base item ID based on the component's own ID. This will be
@@ -170,10 +170,10 @@ Polymer({
     // will get IDs that look like "_option1". Item IDs are prefixed with an
     // underscore to differentiate them from manually-assigned IDs, and to
     // minimize the potential for ID conflicts.
-    var componentId = this.getAttribute( "id" );
-    this.itemBaseId = componentId
-      ? "_" + componentId + "Option"
-      : "_option";
+    var componentId = this.getAttribute('id');
+    this.itemBaseId = componentId ?
+      '_' + componentId + 'Option' :
+      '_option';
   },
 
   publish: {
@@ -203,12 +203,12 @@ Polymer({
    * @method selectItemWithTextPrefix
    * @param prefix [String] The string to search for
    */
-  selectItemWithTextPrefix: function( prefix ) {
-    if ( prefix == null || prefix.length === 0 ) {
+  selectItemWithTextPrefix: function(prefix) {
+    if (prefix == null || prefix.length === 0) {
       return;
     }
-    var index = this._getIndexOfItemWithTextPrefix( prefix );
-    if ( index >= 0 ) {
+    var index = this._getIndexOfItemWithTextPrefix(prefix);
+    if (index >= 0) {
       this.selected = index;
     }
   },
@@ -217,12 +217,12 @@ Polymer({
   selectedItemChanged: function() {
     this.super();
 
-    if ( this.selectedItem ) {
+    if (this.selectedItem) {
 
-      var selectedItemId = this.selectedItem.getAttribute( "id" );
-      this.setAttribute( "aria-activedescendant",  selectedItemId );      
+      var selectedItemId = this.selectedItem.getAttribute('id');
+      this.setAttribute('aria-activedescendant',  selectedItemId);
 
-      this._scrollElementIntoView( this.selectedItem );
+      this._scrollElementIntoView(this.selectedItem);
     }
   },
 
@@ -232,14 +232,15 @@ Polymer({
    * @method selectFirstItem
    */
   selectFirstItem: function() {
-    if ( this.items.length > 0 ) {
+    if (this.items.length > 0) {
       this.selected = 0;
       // The list will have already scrolled the first element into view, but if
       // the list has top padding, the scroll won't be all the way at the top.
       // So, as a special case, force it to scroll to the top.
       this.scrollTop = 0;
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   },
@@ -250,10 +251,11 @@ Polymer({
    * @method selectLastItem
    */
   selectLastItem: function() {
-    if ( this.items.length > 0 ) {
+    if (this.items.length > 0) {
       this.selected = this.items.length - 1;
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   },
@@ -265,10 +267,11 @@ Polymer({
    */
   selectNextItem: function() {
     var index = this.selectedIndex + 1;
-    if ( index < this.items.length ) {
+    if (index < this.items.length) {
       this.selected = index;
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   },
@@ -280,10 +283,11 @@ Polymer({
    */
   selectPreviousItem: function() {
     var index = this.selectedIndex - 1;
-    if ( index >= 0 && this.items.length > 0 ) {
+    if (index >= 0 && this.items.length > 0) {
       this.selected = index;
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   },
@@ -294,7 +298,7 @@ Polymer({
   // If downward is true, move down the list of items to find the first item
   // found at the given y position; if downward is false, move up the list of
   // items to find the last item at that position.
-  _getIndexOfItemAtY: function( y, downward ) {
+  _getIndexOfItemAtY: function(y, downward) {
     var items = this.items;
     var start = downward ? 0 : items.length - 1;
     var end = downward ? items.length : 0;
@@ -302,11 +306,11 @@ Polymer({
     var topOfClientArea = this.offsetTop + this.clientTop;
     var i = start;
     var found = false;
-    while ( i !== end ) {
+    while (i !== end) {
       var item = items[i];
       var itemTop = item.offsetTop - topOfClientArea;
       var itemBottom = itemTop + item.offsetHeight;
-      if ( itemTop <= y && itemBottom >= y ) {
+      if (itemTop <= y && itemBottom >= y) {
         // Item spans the indicated y coordinate.
         found = true;
         break;
@@ -314,7 +318,7 @@ Polymer({
       i += step;
     }
 
-    if ( !found ) {
+    if (!found) {
       return null;
     }
 
@@ -322,16 +326,17 @@ Polymer({
     // but whose content is actually above/below that point.
     // TODO: If the item has a border, then padding should be included in
     // considering a hit.
-    var itemStyle = getComputedStyle( item );
-    var itemPaddingTop = parseFloat( itemStyle.paddingTop );
-    var itemPaddingBottom = parseFloat( itemStyle.paddingBottom );
+    var itemStyle = getComputedStyle(item);
+    var itemPaddingTop = parseFloat(itemStyle.paddingTop);
+    var itemPaddingBottom = parseFloat(itemStyle.paddingBottom);
     var contentTop = itemTop + item.clientTop + itemPaddingTop;
     var contentBottom = contentTop + item.clientHeight - itemPaddingTop - itemPaddingBottom;
-    if ( downward && contentTop <= y
-      || !downward && contentBottom >= y ) {
+    if (downward && contentTop <= y
+      || !downward && contentBottom >= y) {
       // The indicated coordinate hits the actual item content.
       return i;
-    } else {
+    }
+    else {
       // The indicated coordinate falls within the item's padding. Back up to
       // the item below/above the item we found and return that.
       i -= step;
@@ -340,12 +345,12 @@ Polymer({
   },
 
   // Return the index of the first item with the given prefix, else -1.
-  _getIndexOfItemWithTextPrefix: function( prefix ) {
+  _getIndexOfItemWithTextPrefix: function(prefix) {
     var itemTextContents = this._getItemTextContents();
     var prefixLength = prefix.length;
-    for ( var i = 0; i < itemTextContents.length; i++ ) {
+    for (var i = 0; i < itemTextContents.length; i++) {
       var itemTextContent = itemTextContents[i];
-      if ( itemTextContent.substr( 0, prefixLength ) === prefix ) {
+      if (itemTextContent.substr(0, prefixLength) === prefix) {
         return i;
       }
     }
@@ -355,8 +360,8 @@ Polymer({
   // Return an array of the text content (in lowercase) of all items.
   // Cache these results.
   _getItemTextContents: function() {
-    if ( !this._itemTextContents ) {
-      this._itemTextContents = this.flattenChildren.map( function( child ) {
+    if (!this._itemTextContents) {
+      this._itemTextContents = this.flattenChildren.map(function(child) {
         return child.textContent.toLowerCase();
       });
     }
@@ -365,38 +370,38 @@ Polymer({
 
   _handleBackspace: function() {
     var length = this._typedPrefix.length;
-    if ( length > 0 ) {
-      this._typedPrefix = this._typedPrefix.substr( 0, length - 1 );
+    if (length > 0) {
+      this._typedPrefix = this._typedPrefix.substr(0, length - 1);
     }
-    this.selectItemWithTextPrefix( this._typedPrefix );
+    this.selectItemWithTextPrefix(this._typedPrefix);
     this._setPrefixTimeout();
   },
 
-  _handlePlainCharacter: function( char ) {
+  _handlePlainCharacter: function(char) {
     this._typedPrefix += char.toLowerCase();
-    this.selectItemWithTextPrefix( this._typedPrefix );
+    this.selectItemWithTextPrefix(this._typedPrefix);
     this._setPrefixTimeout();
   },
 
-  _itemAdded: function( item ) {
-    this.super([ item ]);
-    item.setAttribute( "role", "option" );
+  _itemAdded: function(item) {
+    this.super([item]);
+    item.setAttribute('role', 'option');
 
     // Ensure each item has an ID so we can set aria-activedescendant on the
     // overall list whenever the selection changes.
-    if ( !item.getAttribute( "id" )) {
-      item.setAttribute( "id", this.itemBaseId + idCount++ );
+    if (!item.getAttribute('id')) {
+      item.setAttribute('id', this.itemBaseId + idCount++);
     }
   },
 
-  _keydown: function( event ) {
+  _keydown: function(event) {
 
     var handled = false;
     var resetPrefix = true;
     
-    switch ( event.keyCode ) {
+    switch (event.keyCode) {
       case 8: // Backspace
-        if ( this.prefixNavigation ) {
+        if (this.prefixNavigation) {
           this._handleBackspace();
           handled = true;
           resetPrefix = false;
@@ -434,33 +439,33 @@ Polymer({
         handled = event.altKey ? this.selectLastItem() : this.selectNextItem();
         break;
       default:
-        if ( this.prefixNavigation
+        if (this.prefixNavigation
           && !event.ctrlKey && !event.metaKey && !event.altKey
           && event.which !== 32 /* Space */) {
-          this._handlePlainCharacter( String.fromCharCode( event.which ));
+          this._handlePlainCharacter(String.fromCharCode(event.which));
         }
         resetPrefix = false;
     }
 
-    if ( this.prefixNavigation && resetPrefix ) {
+    if (this.prefixNavigation && resetPrefix) {
       this._resetTypedPrefix();
     }
 
-    if ( handled ) {
+    if (handled) {
       event.preventDefault();
       return false;
     }
   },
 
   _resetPrefixTimeout: function() {
-    if ( this._prefixTimeout ) {
-      clearTimeout( this._prefixTimeout );
+    if (this._prefixTimeout) {
+      clearTimeout(this._prefixTimeout);
       this._prefixTimeout = false;
     }
   },
 
   _resetTypedPrefix: function() {
-    this._typedPrefix = "";
+    this._typedPrefix = '';
     this._resetPrefixTimeout();
   },
 
@@ -470,7 +475,7 @@ Polymer({
   // Blink has a scrollIntoViewIfNeeded() function that almost does what we
   // want, but unfortunately it's non-standard, and in any event often ends up
   // scrolling more than is absolutely necessary.
-  _scrollElementIntoView: function( element ) {
+  _scrollElementIntoView: function(element) {
     // Get the relative position of the element with respect to the top of the
     // list's scrollable canvas. An element at the top of the list will have a
     // elementTop of 0.
@@ -478,68 +483,71 @@ Polymer({
     var elementBottom = elementTop + element.offsetHeight;
     // Determine the bottom of the scrollable canvas.
     var scrollBottom = this.scrollTop + this.clientHeight;
-    if ( elementBottom > scrollBottom ) {
+    if (elementBottom > scrollBottom) {
       // Scroll up until element is entirely visible.
       this.scrollTop += elementBottom - scrollBottom;
-    } else if ( elementTop < this.scrollTop ) {
+    }
+    else if (elementTop < this.scrollTop) {
       // Scroll down until element is entirely visible.
       this.scrollTop = elementTop;
     }
   },
 
-  // Move by one page downward ( if downward is true ), or upward (if false).
+  // Move by one page downward (if downward is true), or upward (if false).
   // Return true if we ended up changing the selection, false if not.
   // TODO: Better support for horizontal lists.
-  _scrollOnePage: function( downward ) {
+  _scrollOnePage: function(downward) {
     // Determine the item visible just at the edge of direction we're heading.
     // We'll select that item if it's not already selected.
-    var edge = this.scrollTop + ( downward ? this.clientHeight : 0 );
-    var indexOfItemAtEdge = this._getIndexOfItemAtY( edge, downward );
+    var edge = this.scrollTop + (downward ? this.clientHeight : 0);
+    var indexOfItemAtEdge = this._getIndexOfItemAtY(edge, downward);
 
     var selectedIndex = this.selectedIndex;
     var newIndex;
-    if ( indexOfItemAtEdge && selectedIndex === indexOfItemAtEdge ) {
+    if (indexOfItemAtEdge && selectedIndex === indexOfItemAtEdge) {
       // The item at the edge was already selected, so scroll in the indicated
       // direction by one page. Leave the new item at that edge selected.
-      var delta = ( downward ? 1 : -1 ) * this.clientHeight;
-      newIndex = this._getIndexOfItemAtY( edge + delta, downward );
-    } else {
+      var delta = (downward ? 1 : -1) * this.clientHeight;
+      newIndex = this._getIndexOfItemAtY(edge + delta, downward);
+    }
+    else {
       // The item at the edge wasn't selected yet. Instead of scrolling, we'll
       // just select that item. That is, the first attempt to page up/down
       // usually just moves the selection to the edge in that direction.
       newIndex = indexOfItemAtEdge;
     }
 
-    if ( !newIndex ) {
+    if (!newIndex) {
       // We can't find an item in the direction we want to travel. Select the
       // last item (if moving downward) or first item (if moving upward).
-      newIndex = ( downward ? this.items.length - 1 : 0 );
+      newIndex = (downward ? this.items.length - 1 : 0);
     }
 
-    if ( newIndex !== selectedIndex ) {
+    if (newIndex !== selectedIndex) {
       this.selected = newIndex;
       return true; // We handled the page up/down ourselves.
-    } else {
+    }
+    else {
       return false; // We didn't do anything.
     }
   },
 
   // Return true if the selected control is displayed inline.
   _selectedItemIsInline: function() {
-    if ( !this.selectedItem ) {
+    if (!this.selectedItem) {
       return false;
     }
-    var style = getComputedStyle( this.selectedItem );
-    var inlineDisplayValues = [ "inline", "inline-block", "inline-table" ];
-    var itemIsInline = ( inlineDisplayValues.indexOf( style.display ) >= 0 );
+    var style = getComputedStyle(this.selectedItem);
+    var inlineDisplayValues = ['inline', 'inline-block', 'inline-table'];
+    var itemIsInline = (inlineDisplayValues.indexOf(style.display) >= 0);
     return itemIsInline;
   },
 
   _setPrefixTimeout: function() {
     this._resetPrefixTimeout();
-    this._prefixTimeout = setTimeout( function() {
+    this._prefixTimeout = setTimeout(function() {
       this._resetTypedPrefix();
-    }.bind( this ), this._prefixTimeoutDuration );
+    }.bind(this), this._prefixTimeoutDuration);
   },
 
   // The text content of the items. This is only populated if the user tries to
@@ -554,7 +562,7 @@ Polymer({
   _prefixTimeoutDuration: 1000,
 
   // The string the user has typed to navigate by prefix.
-  _typedPrefix: ""
+  _typedPrefix: ''
 
 });
 
