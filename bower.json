@@ -1,14 +1,14 @@
 {
   "name": "basic-list-box",
   "description": "A single-selection list box with highlighting and keyboard navigation",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "license": "MIT",
   "main": "basic-list-box.html",
   "dependencies": {
-    "basic-selector": "basic-web-components/basic-selector#master"
+    "basic-selector": "basic-web-components/basic-selector#^0.5.0"
   },
   "devDependencies": {
-    "basic-framed-content": "basic-web-components/basic-framed-content#master"
+    "basic-framed-content": "basic-web-components/basic-framed-content#^0.5.0"
   },
   "keywords": [
     "basic-web-components",
