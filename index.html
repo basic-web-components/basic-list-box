@@ -2,37 +2,67 @@
 <html>
 <head>
 
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>basic-list-box</title>
 
-<title>basic-list-box</title>
+  <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="basic-list-box.html">
 
-<script src="../webcomponentsjs/webcomponents.js"></script>
-<link rel="import" href="../basic-framed-content/basic-framed-content.html">
-<link rel="import" href="basic-list-box.html">
+  <style>
+  body,
+  button,
+  input {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+  }
 
-<style>
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 15px;
-  margin: 0;
-}
+  body {
+    margin: 0;
+    padding: 2em; /* Until we use basic-framed-content again */
+  }
 
-basic-framed-content {
-  padding: 2em;
-}
+  basic-framed-content {
+    padding: 2em;
+  }
 
-#list {
-  height: 200px;
-  max-width: 300px;
-}
-</style>
+  basic-list-box {
+    height: 200px;
+    max-width: 400px;
+    width: 100%
+  }
+  </style>
+
+  <script>
+  var changeDetectorAspect = {
+    contribute: {
+
+      set selectedItem(selectedItem) {
+        var text = selectedItem ? selectedItem.textContent : selectedItem;
+        console.log("selectedItem: " + text);
+      },
+
+      // TODO: On WebKit, if you delete an item at runtime, the number of items
+      // reported by the function below will be incorrect; it will include the
+      // just-deleted item in its count. It appears that, during the mutation
+      // handler, the old item is still somehow half in, half out of the
+      // collection of children/content/items.
+      itemsChanged: function() {
+        console.log("itemsChanged: now " + this.items.length + " items");
+      }
+    }
+  };
+
+  document.addEventListener('WebComponentsReady', function() {
+    new Basic.Collective(changeDetectorAspect, document.querySelector('basic-list-box'));
+    document.body.removeAttribute('unresolved');
+  });
+  </script>
 
 </head>
 
 <body unresolved>
-<basic-framed-content>
-<basic-list-box id="list" tabIndex="0" aria-label="Fruits">
+<basic-list-box aria-label="Fruits">
   <div>Acai</div>
   <div>Acerola</div>
   <div>Apple</div>
@@ -77,7 +107,6 @@ basic-framed-content {
   <div>Tangerine</div>
   <div>Watermelon</div>
 </basic-list-box>
-</basic-framed-content>
 </body>
 
 </html>

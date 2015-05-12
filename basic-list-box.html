@@ -3,8 +3,21 @@ A single-selection list box that supports selection highlighting (using the
 system highlight color) and keyboard navigation.
 
 The user can select an item with the mouse/touch or keyboard: Up/Down, Page
-Up/Down, Home/End. The user can also select an item by typing the beginning of
-an item's text.
+Up/Down, Home/End.
+
+Like other Basic Web Components, this can handle distributed content: you can
+include a content element inside a basic-list-box, and the list will navigate
+through the distributed content. Note: for the time being, if you do use basic-
+list-box inside your own component, it appears that you'll need to wire up your
+own keyboard navigation, and forward the list navigation keys to the basic-list-
+box.
+
+This component includes basic ARIA support to provide a reasonable default
+experience, e.g., for screen readers. The list component itself will be assigned
+an appropriate ARIA role (default is "listbox"). The ID of the selected item
+will be reflected in an "aria-activedescendant" attribute applied to the list.
+To support this feature, all items in the list need unique IDs. If an item does
+not have an ID, basic-list-box will automatically assign a default ID.
 
 The keyboard interaction model generally follows that of Microsoft Windows'
 list boxes instead of those in OS X:
@@ -21,58 +34,48 @@ list boxes instead of those in OS X:
 Programmatically selecting an item (by setting the selected property) scrolls
 the item into view.
 
-Like other Basic Web Components, this can handle distributed content: you can
-include a content element inside a basic-list-box, and the list will navigate
-through the distributed content. Note: for the time being, if you do use basic-
-list-box inside your own component, it appears that you'll need to wire up your
-own keyboard navigation, and forward the list navigation keys to the basic-list-
-box.
-
-This component includes basic ARIA support to provide a reasonable default
-experience, e.g., for screen readers. The list component itself will be assigned
-an appropriate ARIA role (default is "listbox"). The ID of the selected item
-will be reflected in an "aria-activedescendant" attribute applied to the list.
-To support this feature, all items in the list need unique IDs. If an item does
-not have an ID, basic-list-box will automatically assign a default ID.
+The user can also select an item by typing the beginning of an item's text.
 
 @element basic-list-box
 @demo http://basic-web-components.github.io/components/basic-list-box/
 -->
-<!--
-TODO: This doesn't deal with multi-selection. Either incorporate (rather than
-inherit from) core-selector to avoid the multi-selection case, or else enhance
-this to support multi-selection. For keyboard navigation, that would be mean
-collapsing the selection state to a single item when navigation up/down.
--->
 
-<link rel="import" href="../basic-selector/basic-selector.html">
+<link rel="import" href="../basic-aspect/basic-aspect.html">
+<link rel="import" href="../basic-keyboard/basic-keyboard.html">
+<link rel="import" href="../basic-keyboard-direction/basic-keyboard-direction.html">
+<link rel="import" href="../basic-keyboard-paging/basic-keyboard-paging.html">
+<link rel="import" href="../basic-keyboard-prefix-selection/basic-keyboard-prefix-selection.html">
+<link rel="import" href="../basic-children-content/basic-children-content.html">
+<link rel="import" href="../basic-content-items/basic-content-items.html">
+<link rel="import" href="../basic-item-selection/basic-item-selection.html">
+<link rel="import" href="../basic-tap-selection/basic-tap-selection.html">
+<link rel="import" href="../basic-direction-selection/basic-direction-selection.html">
+<link rel="import" href="../basic-accessible-list/basic-accessible-list.html">
+<link rel="import" href="../basic-selection-highlight/basic-selection-highlight.html">
+<link rel="import" href="../basic-selection-scroll/basic-selection-scroll.html">
 
-<polymer-element name="basic-list-box" extends="basic-selector">
+<script src="../basic-shared/Generic.js"></script>
 
-<template>
-
+<dom-module id="basic-list-box">
   <style>
   :host {
-    display: block;
-    outline: none;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+
+  [target="child"] {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex: 1;
+    flex: 1;
+  }
+
+  #itemsContainer {
+    -webkit-flex: 1;
+    flex: 1;
     -webkit-overflow-scrolling: touch;
     overflow-y: scroll; /* for momentum scrolling */
-    -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 );
-  }
-
-  :host(:focus) {
-    outline: 1px dotted; /* Safari/IE */
-    outline: auto 5px -webkit-focus-ring-color; /* Chrome/Webkit */
-  }
-
-  polyfill-next-selector {
-    content: ':host > *';
-  }
-  ::content > * {
-    box-sizing: border-box;
-    display: block;
-    -webkit-user-select: none;
-    user-select: none;
   }
 
   /* Generic appearance */
@@ -82,491 +85,129 @@ collapsing the selection state to a single item when navigation up/down.
     cursor: default;
   }
 
-  polyfill-next-selector {
-    content: ':host([generic=""]) > *';
-  }
-  :host([generic=""]) ::content > * {
+  :host([generic=""]) #itemsContainer ::content > * {
     padding: 0.25em;
   }
-
-  polyfill-next-selector {
-    content: ':host([generic=""]) > .core-selected';
-  }
-  :host([generic=""]) ::content > .core-selected {
-    background: highlight;
-    color: highlighttext;
-  }
   </style>
-
-  <shadow></shadow>
-
-</template>
+  <template>
+    <basic-keyboard-direction></basic-keyboard-direction>
+    <basic-keyboard-paging></basic-keyboard-paging>
+    <basic-keyboard-prefix-selection></basic-keyboard-prefix-selection>
+    <basic-direction-selection></basic-direction-selection>
+    <basic-selection-highlight></basic-selection-highlight>
+    <basic-selection-scroll></basic-selection-scroll>
+    <basic-accessible-list></basic-accessible-list>
+    <basic-content-items></basic-content-items>
+    <basic-item-selection></basic-item-selection>
+    <basic-keyboard target="child">
+      <basic-tap-selection target="child">
+        <basic-children-content id="itemsContainer">
+          <content></content>
+        </basic-children-content>
+      </basic-tap-selection>
+    </basic-keyboard>
+  </template>
+</dom-module>
 
 <script>
-(function() {
-
-// Used to assign unique IDs to item elements without IDs;
-idCount = 0;
-
 Polymer({
 
-  contentChanged: function() {
-    this.super();
-    this._itemTextContents = null;
-    this._resetTypedPrefix();
+  behaviors: [
+    Basic.Aspect,
+    Basic.Generic
+  ],
+
+  hostAttributes: {
+    target: 'shadow'
   },
 
-  /**
-   * Scroll down one page.
-   *
-   * @method pageDown
-   */
-  pageDown: function() {
-    return this._scrollOnePage(true);
-  },
-
-  /**
-   * Scroll up one page.
-   *
-   * @method pageUp
-   */
-  pageUp: function() {
-    return this._scrollOnePage(false);
-  },
-
-  ready: function() {
-
-    // HACK: We'd prefer to use "tap" (the default event), but as of 6/11/14,
-    // that doesn't appear to work in IE 11.
-    this.activateEvent = 'click';
-
-    this.super();
-
-    if (this.getAttribute('tabIndex') == null) {
-      // Convince the browser that the list is focusable, but without forcing it
-      // into the tab order (as a positive tabindex would do). Firefox, Chrome,
-      // and IE seem to handle this as desired if tabindex is *explicitly* set
-      // to a negative number.
-      this.tabIndex = -1;
-    }
-
-    this.addEventListener('keydown', function(event) {
-      return this._keydown(event);
-    }.bind(this));
-
-    if (this.getAttribute('generic') == null) {
-      this.generic = true;
-    }
-
-    if (this.getAttribute('role') == null) {
-      // Set the default ARIA role.
-      this.setAttribute('role', 'listbox');
-    }
-
-    // Determine a base item ID based on the component's own ID. This will be
-    // combined with a unique integer to assign IDs to items that don't have an
-    // explicit ID. If the basic-list-box has ID "foo", then its items will have
-    // IDs that look like "_fooOption1". If the list has no ID itself, its items
-    // will get IDs that look like "_option1". Item IDs are prefixed with an
-    // underscore to differentiate them from manually-assigned IDs, and to
-    // minimize the potential for ID conflicts.
-    var componentId = this.getAttribute('id');
-    this.itemBaseId = componentId ?
-      '_' + componentId + 'Option' :
-      '_option';
-  },
-
-  publish: {
-
-    generic: {
-      value: null,
-      reflect: true
-    },
-
-    /**
-     * True if prefix navigation is enabled. This lets the user navigate by
-     * typing the beginning of an item; the first matching item is automatically
-     * selected.
-     *
-     * @attribute prefixNavigation
-     * @type Boolean
-     * @default true
-     */
-    prefixNavigation: {
-      value: true
-    }
-  },
-
-  /**
-   * Select the first item whose text content begins with the given prefix.
-   *
-   * @method selectItemWithTextPrefix
-   * @param prefix [String] The string to search for
-   */
-  selectItemWithTextPrefix: function(prefix) {
-    if (prefix == null || prefix.length === 0) {
-      return;
-    }
-    var index = this._getIndexOfItemWithTextPrefix(prefix);
-    if (index >= 0) {
-      this.selected = index;
-    }
-  },
-
-  // Override base implementation so we can ensure new item is in view.
-  selectedItemChanged: function() {
-    this.super();
-
-    if (this.selectedItem) {
-
-      var selectedItemId = this.selectedItem.getAttribute('id');
-      this.setAttribute('aria-activedescendant',  selectedItemId);
-
-      this._scrollElementIntoView(this.selectedItem);
-    }
-  },
-
-  /**
-   * Select the first item in the list.
-   *
-   * @method selectFirstItem
-   */
-  selectFirstItem: function() {
-    if (this.items.length > 0) {
-      this.selected = 0;
-      // The list will have already scrolled the first element into view, but if
-      // the list has top padding, the scroll won't be all the way at the top.
-      // So, as a special case, force it to scroll to the top.
-      this.scrollTop = 0;
-      return true;
-    }
-    else {
-      return false;
-    }
-  },
-
-  /**
-   * Select the last item in the list.
-   *
-   * @method selectLastItem
-   */
-  selectLastItem: function() {
-    if (this.items.length > 0) {
-      this.selected = this.items.length - 1;
-      return true;
-    }
-    else {
-      return false;
-    }
-  },
-
-  /**
-   * Select the next item in the list.
-   *
-   * @method selectNextItem
-   */
-  selectNextItem: function() {
-    var index = this.selectedIndex + 1;
-    if (index < this.items.length) {
-      this.selected = index;
-      return true;
-    }
-    else {
-      return false;
-    }
-  },
-
-  /**
-   * Select the previous item in the list.
-   *
-   * @method selectPreviousItem
-   */
-  selectPreviousItem: function() {
-    var index = this.selectedIndex - 1;
-    if (index >= 0 && this.items.length > 0) {
-      this.selected = index;
-      return true;
-    }
-    else {
-      return false;
-    }
-  },
-
-  // Return the item whose content spans the given y position (relative to the
-  // top of the list's scrolling client area), or null if not found.
-  //
-  // If downward is true, move down the list of items to find the first item
-  // found at the given y position; if downward is false, move up the list of
-  // items to find the last item at that position.
-  _getIndexOfItemAtY: function(y, downward) {
-    var items = this.items;
-    var start = downward ? 0 : items.length - 1;
-    var end = downward ? items.length : 0;
-    var step = downward ? 1 : -1;
-    var topOfClientArea = this.offsetTop + this.clientTop;
-    var i = start;
-    var found = false;
-    while (i !== end) {
-      var item = items[i];
-      var itemTop = item.offsetTop - topOfClientArea;
-      var itemBottom = itemTop + item.offsetHeight;
-      if (itemTop <= y && itemBottom >= y) {
-        // Item spans the indicated y coordinate.
-        found = true;
-        break;
-      }
-      i += step;
-    }
-
-    if (!found) {
-      return null;
-    }
-
-    // We may have found an item whose padding spans the given y coordinate,
-    // but whose content is actually above/below that point.
-    // TODO: If the item has a border, then padding should be included in
-    // considering a hit.
-    var itemStyle = getComputedStyle(item);
-    var itemPaddingTop = parseFloat(itemStyle.paddingTop);
-    var itemPaddingBottom = parseFloat(itemStyle.paddingBottom);
-    var contentTop = itemTop + item.clientTop + itemPaddingTop;
-    var contentBottom = contentTop + item.clientHeight - itemPaddingTop - itemPaddingBottom;
-    if (downward && contentTop <= y
-      || !downward && contentBottom >= y) {
-      // The indicated coordinate hits the actual item content.
-      return i;
-    }
-    else {
-      // The indicated coordinate falls within the item's padding. Back up to
-      // the item below/above the item we found and return that.
-      i -= step;
-      return i;
-    }
-  },
-
-  // Return the index of the first item with the given prefix, else -1.
-  _getIndexOfItemWithTextPrefix: function(prefix) {
-    var itemTextContents = this._getItemTextContents();
-    var prefixLength = prefix.length;
-    for (var i = 0; i < itemTextContents.length; i++) {
-      var itemTextContent = itemTextContents[i];
-      if (itemTextContent.substr(0, prefixLength) === prefix) {
-        return i;
-      }
-    }
-    return -1;
-  },
-
-  // Return an array of the text content (in lowercase) of all items.
-  // Cache these results.
-  _getItemTextContents: function() {
-    if (!this._itemTextContents) {
-      this._itemTextContents = this.flattenChildren.map(function(child) {
-        return child.textContent.toLowerCase();
-      });
-    }
-    return this._itemTextContents;
-  },
-
-  _handleBackspace: function() {
-    var length = this._typedPrefix.length;
-    if (length > 0) {
-      this._typedPrefix = this._typedPrefix.substr(0, length - 1);
-    }
-    this.selectItemWithTextPrefix(this._typedPrefix);
-    this._setPrefixTimeout();
-  },
-
-  _handlePlainCharacter: function(char) {
-    this._typedPrefix += char.toLowerCase();
-    this.selectItemWithTextPrefix(this._typedPrefix);
-    this._setPrefixTimeout();
-  },
-
-  _itemAdded: function(item) {
-    this.super([item]);
-    item.setAttribute('role', 'option');
-
-    // Ensure each item has an ID so we can set aria-activedescendant on the
-    // overall list whenever the selection changes.
-    if (!item.getAttribute('id')) {
-      item.setAttribute('id', this.itemBaseId + idCount++);
-    }
-  },
-
-  _keydown: function(event) {
-
-    var handled = false;
-    var resetPrefix = true;
-    
-    switch (event.keyCode) {
-      case 8: // Backspace
-        if (this.prefixNavigation) {
-          this._handleBackspace();
-          handled = true;
-          resetPrefix = false;
-        }
-        break;
-      case 27: // Escape
-        handled = true;
-        break;
-      case 33: // Page Up
-        handled = this.pageUp();
-        break;
-      case 34: // Page Down
-        handled = this.pageDown();
-        break;
-      case 35: // End
-        handled = this.selectLastItem();
-        break;
-      case 36: // Home
-        handled = this.selectFirstItem();
-        break;
-      case 37: // Left
-        if (this._selectedItemIsInline()) {
-          handled = this.selectPreviousItem();
-        }
-        break;
-      case 38: // Up
-        handled = event.altKey ? this.selectFirstItem() : this.selectPreviousItem();
-        break;
-      case 39: // Right
-        if (this._selectedItemIsInline()) {
-          handled = this.selectNextItem();
-        }
-        break;
-      case 40: // Down
-        handled = event.altKey ? this.selectLastItem() : this.selectNextItem();
-        break;
-      default:
-        if (this.prefixNavigation
-          && !event.ctrlKey && !event.metaKey && !event.altKey
-          && event.which !== 32 /* Space */) {
-          this._handlePlainCharacter(String.fromCharCode(event.which));
-        }
-        resetPrefix = false;
-    }
-
-    if (this.prefixNavigation && resetPrefix) {
-      this._resetTypedPrefix();
-    }
-
-    if (handled) {
-      event.preventDefault();
-      return false;
-    }
-  },
-
-  _resetPrefixTimeout: function() {
-    if (this._prefixTimeout) {
-      clearTimeout(this._prefixTimeout);
-      this._prefixTimeout = false;
-    }
-  },
-
-  _resetTypedPrefix: function() {
-    this._typedPrefix = '';
-    this._resetPrefixTimeout();
-  },
-
-  // Scroll the given element completely into view, minimizing the degree of
-  // scrolling performed.
-  //
-  // Blink has a scrollIntoViewIfNeeded() function that almost does what we
-  // want, but unfortunately it's non-standard, and in any event often ends up
-  // scrolling more than is absolutely necessary.
-  _scrollElementIntoView: function(element) {
-    // Get the relative position of the element with respect to the top of the
-    // list's scrollable canvas. An element at the top of the list will have a
-    // elementTop of 0.
-    var elementTop = element.offsetTop - this.offsetTop - this.clientTop;
-    var elementBottom = elementTop + element.offsetHeight;
-    // Determine the bottom of the scrollable canvas.
-    var scrollBottom = this.scrollTop + this.clientHeight;
-    if (elementBottom > scrollBottom) {
-      // Scroll up until element is entirely visible.
-      this.scrollTop += elementBottom - scrollBottom;
-    }
-    else if (elementTop < this.scrollTop) {
-      // Scroll down until element is entirely visible.
-      this.scrollTop = elementTop;
-    }
-  },
-
-  // Move by one page downward (if downward is true), or upward (if false).
-  // Return true if we ended up changing the selection, false if not.
-  // TODO: Better support for horizontal lists.
-  _scrollOnePage: function(downward) {
-    // Determine the item visible just at the edge of direction we're heading.
-    // We'll select that item if it's not already selected.
-    var edge = this.scrollTop + (downward ? this.clientHeight : 0);
-    var indexOfItemAtEdge = this._getIndexOfItemAtY(edge, downward);
-
-    var selectedIndex = this.selectedIndex;
-    var newIndex;
-    if (indexOfItemAtEdge && selectedIndex === indexOfItemAtEdge) {
-      // The item at the edge was already selected, so scroll in the indicated
-      // direction by one page. Leave the new item at that edge selected.
-      var delta = (downward ? 1 : -1) * this.clientHeight;
-      newIndex = this._getIndexOfItemAtY(edge + delta, downward);
-    }
-    else {
-      // The item at the edge wasn't selected yet. Instead of scrolling, we'll
-      // just select that item. That is, the first attempt to page up/down
-      // usually just moves the selection to the edge in that direction.
-      newIndex = indexOfItemAtEdge;
-    }
-
-    if (!newIndex) {
-      // We can't find an item in the direction we want to travel. Select the
-      // last item (if moving downward) or first item (if moving upward).
-      newIndex = (downward ? this.items.length - 1 : 0);
-    }
-
-    if (newIndex !== selectedIndex) {
-      this.selected = newIndex;
-      return true; // We handled the page up/down ourselves.
-    }
-    else {
-      return false; // We didn't do anything.
-    }
-  },
-
-  // Return true if the selected control is displayed inline.
-  _selectedItemIsInline: function() {
-    if (!this.selectedItem) {
-      return false;
-    }
-    var style = getComputedStyle(this.selectedItem);
-    var inlineDisplayValues = ['inline', 'inline-block', 'inline-table'];
-    var itemIsInline = (inlineDisplayValues.indexOf(style.display) >= 0);
-    return itemIsInline;
-  },
-
-  _setPrefixTimeout: function() {
-    this._resetPrefixTimeout();
-    this._prefixTimeout = setTimeout(function() {
-      this._resetTypedPrefix();
-    }.bind(this), this._prefixTimeoutDuration);
-  },
-
-  // The text content of the items. This is only populated if the user tries to
-  // navigate with typed prefix matching.
-  _itemTextContents: null,
-
-  // Times out when the user has not typed anything for a bit.
-  _prefixTimeout: null,
-
-  // Time in milliseconds after which the user is considered to have stopped
-  // typing.
-  _prefixTimeoutDuration: 1000,
-
-  // The string the user has typed to navigate by prefix.
-  _typedPrefix: ''
+  is: 'basic-list-box'
 
 });
 
-})();
-</script>
+/*
+ * The following comments document API members provided by mixins. Ideally these
+ * docs will eventually be pulled from the mixin source files, but for now are
+ * copied here by hand.
+ */
 
-</polymer-element>
+/**
+ * True if the component would like to receive generic styling.
+ *
+ * This property is true by default — set it to false to turn off all
+ * generic styles. This makes it easier to apply custom styling; you won't
+ * have to explicitly override styling you don't want.
+ *
+ * @property generic
+ * @type Boolean
+ * @default true
+ */
+
+/**
+ * Returns the positional index for the indicated item.
+ *
+ * @method indexOfItem
+ * @param {Object} item The item whose index is requested.
+ * @returns {Number} The index of the item, or -1 if not found.
+ */
+
+/**
+ * The current set of items in the list.
+ *
+ * @property items
+ * @type [Object]
+ */
+
+/**
+ * Fires when the items in the list change.
+ *
+ * @event items-changed
+ */
+
+/**
+ * Fires when a new item has been selected.
+ *
+ * @event selected-item-changed
+ * @param detail.selectedItem The new selected item.
+ * @param detail.previousItem The previously selected item.
+ */
+
+/**
+ * The index of the item which is currently selected, or -1 if there is no
+ * selection.
+ *
+ * @property selectedIndex
+ * @type Number
+ */
+
+/**
+ * The currently selected item, or null if there is no selection.
+ *
+ * @property selectedItem
+ * @type Object
+ */
+
+/**
+ * Select the first item in the list.
+ *
+ * @method selectFirst
+ */
+
+/**
+ * Select the last item in the list.
+ *
+ * @method selectLast
+ */
+
+/**
+ * Select the next item in the list.
+ *
+ * @method selectNext
+ */
+
+/**
+ * Select the previous item in the list.
+ *
+ * @method selectPrevious
+ */
+</script>
