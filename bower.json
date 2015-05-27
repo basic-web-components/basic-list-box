@@ -1,7 +1,7 @@
 {
   "name": "basic-list-box",
   "description": "A single-selection list box that supports selection highlighting (using the system highlight color) and keyboard navigation.",
-  "version": "0.6.0-preview",
+  "version": "0.6.0",
   "license": "MIT",
   "main": "basic-list-box.html",
   "dependencies": {
@@ -19,7 +19,7 @@
     "basic-selection-scroll": "basic-web-components/basic-selection-scroll#master",
     "basic-tap-selection": "basic-web-components/basic-tap-selection#master",
     "basic-shared": "basic-web-components/basic-shared#master",
-    "polymer": "Polymer/polymer#0.9.0-rc.1"
+    "polymer": "Polymer/polymer#0.9.0"
   },
   "devDependencies": {
     "basic-framed-content": "basic-web-components/basic-framed-content#master",
