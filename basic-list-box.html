@@ -65,6 +65,14 @@ The user can also select an item by typing the beginning of an item's text.
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
 
+    :host {
+      --basic-list-box: {
+        border: 1px solid gray;
+        box-sizing: border-box;
+        cursor: default;
+      };
+    }
+
     [target="child"] {
       display: -webkit-flex;
       display: flex;
@@ -81,13 +89,15 @@ The user can also select an item by typing the beginning of an item's text.
 
     /* Generic appearance */
     :host([generic=""]) {
-      border: 1px solid gray;
-      box-sizing: border-box;
-      cursor: default;
+      @apply(--basic-list-box);
     }
 
     :host([generic=""]) #itemsContainer ::content > * {
+      cursor: default;
       padding: 0.25em;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
     }
     </style>
 
@@ -115,6 +125,10 @@ Polymer({
     Basic.SelectionHighlight,
     Basic.SelectionScroll
   ],
+
+  // attributeChanged: function(name, type) {
+  //   console.log("changed", name);
+  // },
 
   behaviors: [
     Basic.Aspect,
@@ -145,8 +159,33 @@ Polymer({
   },
 
   properties: {
+
+    selectedIndex: {
+      type: Number
+    },
+
+    selectedItem: {
+      type: Object
+    },
+
     target: {
       value: 'shadow'
+    }
+
+  },
+
+  /**
+   * Ensures the selected item is visible. This normally happens by default.
+   * However, if the list box is hidden when the selection is changed, the
+   * auto-scrolling feature won't apply. In that situation, call this method
+   * after the list box becomes visible.
+   *
+   * @method scrollSelectedItemIntoView
+   */
+  scrollSelectedItemIntoView: function() {
+    var item = this.collective.selectedItem;
+    if (item) {
+      this.collective.scrollItemIntoView(item);
     }
   },
 
@@ -158,7 +197,10 @@ Polymer({
    * @type Number
    */
   get selectedIndex() {
-    return this.collective.selectedIndex;
+    // See note at basic-item-selection's selectedIndex getter.
+    if (this._readied) {
+      return this.collective.selectedIndex;
+    }
   },
   set selectedIndex(index) {
     this.collective.selectedIndex = index;
@@ -211,6 +253,41 @@ Polymer({
    */
   selectPrevious: function() {
     return this.collective.selectPrevious();
+  },
+
+  /**
+   * The text content of the selected item.
+   *
+   * Setting this to text not found in any list item will set selectedItem to
+   * null.
+   *
+   * @property value
+   * @type String
+   */
+  get value() {
+    return this.selectedItem == null || this.selectedItem.textContent == null ?
+      '' :
+      this.selectedItem.textContent;
+  },
+  set value(text) {
+
+    var currentIndex = this.selectedIndex;
+    var newIndex = -1; // Assume we won't find the text.
+
+    // Find the item with the indicated text.
+    var items = this.items;
+    for (i = 0, length = items.length; i < length; i++) {
+      if (items[i].textContent === text) {
+        newIndex = i;
+        break;
+      }
+    }
+
+    if (newIndex !== currentIndex) {
+      this.selectedIndex = newIndex;
+      var event = new CustomEvent('value-changed');
+      this.dispatchEvent(event);
+    }
   }
 
 });
